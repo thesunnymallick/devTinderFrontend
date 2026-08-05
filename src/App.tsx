@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 
 const App: React.FC = () => {
   return (
@@ -10,7 +11,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
 
         {/* Signup Route */}
-        {/* <Route path="/signup" element={<DevTinderSignup />} /> */}
+        <Route path="/signup" element={<Signup/>} />
 
         {/* Default Route - Redirect to Login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
