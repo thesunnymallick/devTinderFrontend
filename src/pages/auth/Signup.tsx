@@ -7,72 +7,79 @@ import {
   EyeOffIcon,
 } from "@hugeicons/core-free-icons";
 import logo from "../../assets/logo.png";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { signupUser, clearAuthError } from "../../store/authSlice";
+import {
+  validateFirstName,
+  validateLastName,
+  validateEmail,
+  validatePassword,
+  validateConfirmPassword,
+  validateAgreeToTerms,
+} from "../../utils/validation";
 
 interface SignupFormData {
-  name: string;
-  email: string;
+  firstName: string;
+  lastName: string;
+  emailId: string;
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
 }
 
-interface SignupErrors {
-  name?: string;
-  email?: string;
+interface SignupFieldErrors {
+  firstName?: string;
+  lastName?: string;
+  emailId?: string;
   password?: string;
   confirmPassword?: string;
   agreeToTerms?: string;
 }
 
 const Signup: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { loading, error: apiError } = useAppSelector((state) => state.auth);
+
   const [formData, setFormData] = useState<SignupFormData>({
-    name: "",
-    email: "",
+    firstName: "",
+    lastName: "",
+    emailId: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
   });
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
-  const [errors, setErrors] = useState<SignupErrors>({});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
 
   const validateForm = (): boolean => {
-    const newErrors: SignupErrors = {};
+    const newErrors: SignupFieldErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
-    }
+    const firstNameResult = validateFirstName(formData.firstName);
+    if (!firstNameResult.valid) newErrors.firstName = firstNameResult.message;
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    }
+    const lastNameResult = validateLastName(formData.lastName);
+    if (!lastNameResult.valid) newErrors.lastName = lastNameResult.message;
 
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
+    const emailResult = validateEmail(formData.emailId);
+    if (!emailResult.valid) newErrors.emailId = emailResult.message;
 
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.confirmPassword !== formData.password) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
+    const passwordResult = validatePassword(formData.password);
+    if (!passwordResult.valid) newErrors.password = passwordResult.message;
 
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = "You must agree to the terms to continue";
-    }
+    const confirmResult = validateConfirmPassword(
+      formData.password,
+      formData.confirmPassword
+    );
+    if (!confirmResult.valid) newErrors.confirmPassword = confirmResult.message;
 
-    setErrors(newErrors);
+    const termsResult = validateAgreeToTerms(formData.agreeToTerms);
+    if (!termsResult.valid) newErrors.agreeToTerms = termsResult.message;
+
+    setFieldErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -82,33 +89,29 @@ const Signup: React.FC = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    if (errors[name as keyof SignupErrors]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
+    if (fieldErrors[name as keyof SignupFieldErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     }
+    if (apiError) dispatch(clearAuthError());
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSuccessMessage("");
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    setIsLoading(true);
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setSuccessMessage("✓ Account created! Redirecting...");
-      setTimeout(() => {
-        console.log("Redirecting to dashboard");
-      }, 2000);
-    } catch (error) {
-      setErrors({ email: "Signup failed. Please try again." });
-    } finally {
-      setIsLoading(false);
+    // confirmPassword/agreeToTerms are client-side only — not sent to the API
+    const result = await dispatch(
+      signupUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        emailId: formData.emailId.trim(),
+        password: formData.password,
+      })
+    );
+
+    if (signupUser.fulfilled.match(result)) {
+      navigate("/", { replace: true });
     }
   };
 
@@ -125,59 +128,58 @@ bg-violet-500/20 blur-[180px]"
        w-[500px] h-[500px] rounded-full bg-violet-400/20 blur-[120px]"
       />
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center ">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div
-          className="px-[16px] sm:px-8 lg:px-12 py-12 bg-[#141418]/60
-           sm:border border-[#2A2A35]
-          backdrop-blur-3xl  rounded-2xl h-screen sm:h-full"
+          className="w-full max-w-md px-6 sm:px-8 py-8 bg-[#141418]/60
+           border border-[#2A2A35]
+          backdrop-blur-3xl rounded-2xl"
         >
           {/* Logo & Header */}
-          <div className="mb-4">
-            <div className="flex items-center flex-col mb-4">
-              <img src={logo} className="w-[80px] h-[80px] object-contain" />
-              <h1 className="text-3xl font-bold text-white">
+          <div className="mb-5">
+            <div className="flex items-center flex-col mb-3">
+              <img src={logo} className="w-[48px] h-[48px] object-contain" />
+              <h1 className="text-xl font-bold text-white">
                 <span className="text-indigo-400">Dev</span>Tinder
               </h1>
             </div>
 
             <div className="flex flex-col items-center justify-center">
-              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-3">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1.5">
                 Create account
               </h2>
-              <p className="text-slate-400 text-base sm:text-lg">
+              <p className="text-slate-400 text-sm text-center">
                 Join and start connecting with amazing developers
               </p>
             </div>
           </div>
 
           {/* Signup Form */}
-          <form onSubmit={handleSubmit} className="max-w-md space-y-6">
-            {/* Success Message */}
-            {successMessage && (
-              <div className="p-4 bg-green-900/30 border border-green-500/50 rounded-lg">
-                <p className="text-green-400 text-sm font-medium">
-                  {successMessage}
-                </p>
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {/* API error */}
+            {apiError && (
+              <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
+                <p className="text-red-400 text-sm font-medium">{apiError}</p>
               </div>
             )}
 
-            {/* Name Input */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-slate-300 mb-2"
-              >
-                Full name
-              </label>
-              <div className="relative">
+            {/* First / Last Name */}
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-slate-300 mb-1.5"
+                >
+                  First name
+                </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
+                  id="firstName"
+                  name="firstName"
+                  autoComplete="given-name"
+                  value={formData.firstName}
                   onChange={handleChange}
-                  placeholder="John Doe"
-                  className={`w-full px-4 py-3 rounded-xl
+                  placeholder="Pooja"
+                  className={`w-full px-4 py-2.5 text-sm rounded-xl
   bg-[#18181B]
   border
   text-white
@@ -187,38 +189,76 @@ bg-violet-500/20 blur-[180px]"
   focus:ring-2
   focus:ring-[#8B5CF6]/30
   ${
-    errors.name ? "border-red-500" : "border-[#2A2A35] focus:border-[#8B5CF6]"
+    fieldErrors.firstName
+      ? "border-red-500"
+      : "border-[#2A2A35] focus:border-[#8B5CF6]"
   }`}
                 />
+                {fieldErrors.firstName && (
+                  <p className="text-red-400 text-xs mt-1">{fieldErrors.firstName}</p>
+                )}
               </div>
-              {errors.name && (
-                <p className="text-red-400 text-xs mt-1">{errors.name}</p>
-              )}
+
+              <div className="flex-1">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-slate-300 mb-1.5"
+                >
+                  Last name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  autoComplete="family-name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Nair"
+                  className={`w-full px-4 py-2.5 text-sm rounded-xl
+  bg-[#18181B]
+  border
+  text-white
+  placeholder:text-[#71717A]
+  transition-all duration-300
+  focus:outline-none
+  focus:ring-2
+  focus:ring-[#8B5CF6]/30
+  ${
+    fieldErrors.lastName
+      ? "border-red-500"
+      : "border-[#2A2A35] focus:border-[#8B5CF6]"
+  }`}
+                />
+                {fieldErrors.lastName && (
+                  <p className="text-red-400 text-xs mt-1">{fieldErrors.lastName}</p>
+                )}
+              </div>
             </div>
 
             {/* Email Input */}
             <div>
               <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-300 mb-2"
+                htmlFor="emailId"
+                className="block text-sm font-medium text-slate-300 mb-1.5"
               >
                 Email address
               </label>
               <div className="relative">
                 <HugeiconsIcon
                   icon={Mail01Icon}
-                  size={20}
+                  size={18}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
                 />
 
                 <input
                   type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  id="emailId"
+                  name="emailId"
+                  autoComplete="email"
+                  value={formData.emailId}
                   onChange={handleChange}
                   placeholder="name@example.com"
-                  className={`w-full pl-12 pr-4 py-3 rounded-xl
+                  className={`w-full pl-11 pr-4 py-2.5 text-sm rounded-xl
   bg-[#18181B]
   border
   text-white
@@ -228,12 +268,14 @@ bg-violet-500/20 blur-[180px]"
   focus:ring-2
   focus:ring-[#8B5CF6]/30
   ${
-    errors.email ? "border-red-500" : "border-[#2A2A35] focus:border-[#8B5CF6]"
+    fieldErrors.emailId
+      ? "border-red-500"
+      : "border-[#2A2A35] focus:border-[#8B5CF6]"
   }`}
                 />
               </div>
-              {errors.email && (
-                <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+              {fieldErrors.emailId && (
+                <p className="text-red-400 text-xs mt-1">{fieldErrors.emailId}</p>
               )}
             </div>
 
@@ -241,24 +283,25 @@ bg-violet-500/20 blur-[180px]"
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-300 mb-2"
+                className="block text-sm font-medium text-slate-300 mb-1.5"
               >
                 Password
               </label>
               <div className="relative">
                 <HugeiconsIcon
                   icon={LockIcon}
-                  size={20}
+                  size={18}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
                 />
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full pl-12 pr-12 py-3 rounded-xl
+                  className={`w-full pl-11 pr-11 py-2.5 text-sm rounded-xl
   bg-[#18181B]
   border
   text-white
@@ -268,7 +311,7 @@ bg-violet-500/20 blur-[180px]"
   focus:ring-2
   focus:ring-[#8B5CF6]/30
   ${
-    errors.password
+    fieldErrors.password
       ? "border-red-500"
       : "border-[#2A2A35] focus:border-[#8B5CF6]"
   }`}
@@ -280,14 +323,14 @@ bg-violet-500/20 blur-[180px]"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <HugeiconsIcon icon={EyeOffIcon} size={20} />
+                    <HugeiconsIcon icon={EyeOffIcon} size={18} />
                   ) : (
-                    <HugeiconsIcon icon={ViewIcon} size={20} />
+                    <HugeiconsIcon icon={ViewIcon} size={18} />
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-red-400 text-xs mt-1">{errors.password}</p>
+              {fieldErrors.password && (
+                <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>
               )}
             </div>
 
@@ -295,24 +338,25 @@ bg-violet-500/20 blur-[180px]"
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-slate-300 mb-2"
+                className="block text-sm font-medium text-slate-300 mb-1.5"
               >
                 Confirm password
               </label>
               <div className="relative">
                 <HugeiconsIcon
                   icon={LockIcon}
-                  size={20}
+                  size={18}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
                 />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   id="confirmPassword"
                   name="confirmPassword"
+                  autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full pl-12 pr-12 py-3 rounded-xl
+                  className={`w-full pl-11 pr-11 py-2.5 text-sm rounded-xl
   bg-[#18181B]
   border
   text-white
@@ -322,7 +366,7 @@ bg-violet-500/20 blur-[180px]"
   focus:ring-2
   focus:ring-[#8B5CF6]/30
   ${
-    errors.confirmPassword
+    fieldErrors.confirmPassword
       ? "border-red-500"
       : "border-[#2A2A35] focus:border-[#8B5CF6]"
   }`}
@@ -336,15 +380,15 @@ bg-violet-500/20 blur-[180px]"
                   }
                 >
                   {showConfirmPassword ? (
-                    <HugeiconsIcon icon={EyeOffIcon} size={20} />
+                    <HugeiconsIcon icon={EyeOffIcon} size={18} />
                   ) : (
-                    <HugeiconsIcon icon={ViewIcon} size={20} />
+                    <HugeiconsIcon icon={ViewIcon} size={18} />
                   )}
                 </button>
               </div>
-              {errors.confirmPassword && (
+              {fieldErrors.confirmPassword && (
                 <p className="text-red-400 text-xs mt-1">
-                  {errors.confirmPassword}
+                  {fieldErrors.confirmPassword}
                 </p>
               )}
             </div>
@@ -359,18 +403,26 @@ bg-violet-500/20 blur-[180px]"
                   onChange={handleChange}
                   className="w-4 h-4 mt-0.5 bg-slate-800 border border-slate-700 rounded accent-indigo-400 cursor-pointer"
                 />
-                 <span className="text-sm text-slate-400">
-                    I agree to the{" "}
-                    <a href="#" className="text-violet-400 hover:text-violet-300 underline"> Terms & Conditions</a> {" "}
-                    and {" "}
-                    <a href="#"  className="text-violet-400 hover:text-violet-300 underline">Privacy Policy</a>
-
-                     </span>
-           
+                <span className="text-sm text-slate-400">
+                  I agree to the{" "}
+                  <a
+                    href="#"
+                    className="text-violet-400 hover:text-violet-300 underline"
+                  >
+                    Terms & Conditions
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="#"
+                    className="text-violet-400 hover:text-violet-300 underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </span>
               </label>
-              {errors.agreeToTerms && (
+              {fieldErrors.agreeToTerms && (
                 <p className="text-red-400 text-xs mt-1">
-                  {errors.agreeToTerms}
+                  {fieldErrors.agreeToTerms}
                 </p>
               )}
             </div>
@@ -378,20 +430,22 @@ bg-violet-500/20 blur-[180px]"
             {/* Sign Up Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full  bg-gradient-to-r from-[#7C5CFF] via-[#8B5CF6] to-[#A78BFA]
-               text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:scale-100   disabled:cursor-not-allowed"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#7C5CFF] via-[#8B5CF6] to-[#A78BFA]
+               text-white font-semibold py-2.5 text-sm rounded-lg transition-all transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Creating account..." : "Create account"}
+              {loading ? "Creating account..." : "Create account"}
             </button>
           </form>
 
           {/* Login Link */}
-          <p className="text-center text-slate-400 text-sm mt-8 max-w-md">
+          <p className="text-center text-slate-400 text-sm mt-6">
             Already have an account?{" "}
-            
-            <Link to={"/login"} className="text-violet-400
-            hover:text-violet-300 font-semibold transition-colors">
+            <Link
+              to={"/login"}
+              className="text-violet-400
+            hover:text-violet-300 font-semibold transition-colors"
+            >
               login
             </Link>
           </p>

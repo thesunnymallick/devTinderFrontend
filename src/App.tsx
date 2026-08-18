@@ -1,42 +1,64 @@
-import React from "react";
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+import { useAppDispatch } from "./store/hooks";
+import { checkAuthUser } from "./store/authSlice";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import ProtectedRoute from "./components/shared/ProtectedRoute";
+import PublicRoute from "./components/shared/PublicRoute";
+// Replace these with your actual pages
+import Home from "./pages/home/Home";
+import NotFound from "./pages/others/NotFound";
 
-const App: React.FC = () => {
+const AppRoutes = () => {
+  const dispatch = useAppDispatch();
+
+  // Check once on load whether the auth cookie from a previous session is still valid.
+  useEffect(() => {
+    dispatch(checkAuthUser());
+  }, [dispatch]);
+
   return (
-    <Router>
-      <Routes>
-        {/* Login Route */}
-        <Route path="/login" element={<Login />} />
-
-        {/* Signup Route */}
-        <Route path="/signup" element={<Signup/>} />
-
-        {/* Default Route - Redirect to Login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* 404 Not Found */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
-// Simple 404 Component
-const NotFound: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold text-white mb-4">404</h1>
-      <p className="text-slate-400 mb-8">Page not found</p>
-      <a
-        href="/login"
-        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold rounded-lg transition-all"
-      >
-        Back to Login
-      </a>
-    </div>
-  </div>
-);
+const App = () => {
+  return (
+    <Provider store={store}>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </Provider>
+  );
+};
 
 export default App;
