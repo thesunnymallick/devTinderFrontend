@@ -8,8 +8,10 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import PublicRoute from "./components/shared/PublicRoute";
-// Replace these with your actual pages
 import Home from "./pages/home/Home";
+import Profile from "./pages/profile/Profile";
+import Requests from "./pages/requests/Requests";
+import Connections from "./pages/connections/Connections";
 import NotFound from "./pages/others/NotFound";
 
 const AppRoutes = () => {
@@ -43,6 +45,30 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/requests"
+        element={
+          <ProtectedRoute>
+            <Requests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/connections"
+        element={
+          <ProtectedRoute>
+            <Connections />
           </ProtectedRoute>
         }
       />

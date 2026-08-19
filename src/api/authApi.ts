@@ -17,19 +17,34 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   emailId: string;
+  age?: number;
+  gender?: string;
+  bio?: string;
+  photoUrl?: string;
+  skills?: string[];
   [key: string]: unknown;
 }
 
-/** POST /auth/signup */
-export const signupApi = async (payload: SignupPayload): Promise<AuthUser> => {
+/**
+ * POST /auth/signup
+ * Backend only creates the user and returns a success message —
+ * it does NOT set a cookie or return the user object here.
+ */
+export const signupApi = async (payload: SignupPayload): Promise<string> => {
   const response = await axiosInstance.post("/auth/signup", payload);
-  return (response.data?.data ?? response.data) as AuthUser;
+  const body = response.data?.data ?? response.data;
+  return body?.message ?? "Account created successfully";
 };
 
-/** POST /auth/login */
-export const loginApi = async (payload: LoginPayload): Promise<AuthUser> => {
+/**
+ * POST /auth/login
+ * Sets the auth cookie via res.cookie("token", ...), but the response body
+ * itself has no user object — just { code, success, message }.
+ */
+export const loginApi = async (payload: LoginPayload): Promise<string> => {
   const response = await axiosInstance.post("/auth/login", payload);
-  return (response.data?.data ?? response.data) as AuthUser;
+  const body = response.data?.data ?? response.data;
+  return body?.message ?? "Logged in successfully";
 };
 
 /** POST /auth/logout */
@@ -39,10 +54,11 @@ export const logoutApi = async (): Promise<void> => {
 
 /**
  * GET /profile/view
- * Used on app load to check if the existing auth cookie is still valid.
- * Update the path here if your backend exposes a different "who am I" route.
+ * viewProfileController responds with { data: { code, success, message, user } } —
+ * the user object is nested under `user`, not the body itself.
  */
 export const fetchCurrentUserApi = async (): Promise<AuthUser> => {
   const response = await axiosInstance.get("/profile/view");
-  return (response.data?.data ?? response.data) as AuthUser;
+  const body = response.data?.data ?? response.data;
+  return body?.user as AuthUser;
 };

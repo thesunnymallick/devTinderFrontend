@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Mail01Icon,
@@ -26,10 +26,16 @@ interface LoginFieldErrors {
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error: apiError } = useAppSelector((state) => state.auth);
 
+  // If we just arrived from a successful signup, Signup.tsx passes the email
+  // through router state so the person doesn't have to retype it.
+  const prefillEmail = (location.state as { prefillEmail?: string } | null)?.prefillEmail ?? "";
+  const justSignedUp = Boolean(prefillEmail);
+
   const [formData, setFormData] = useState<LoginFormData>({
-    emailId: "",
+    emailId: prefillEmail,
     password: "",
     rememberMe: false,
   });
@@ -116,6 +122,15 @@ bg-violet-500/20 blur-[180px]"
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {/* Just signed up */}
+            {justSignedUp && !apiError && (
+              <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
+                <p className="text-green-400 text-sm font-medium">
+                  ✓ Account created! Sign in to continue.
+                </p>
+              </div>
+            )}
+
             {/* API error */}
             {apiError && (
               <div className="p-3 bg-red-900/30 border border-red-500/50 rounded-lg">

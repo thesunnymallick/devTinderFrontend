@@ -111,7 +111,12 @@ const Signup: React.FC = () => {
     );
 
     if (signupUser.fulfilled.match(result)) {
-      navigate("/", { replace: true });
+      // Signup never authenticates the user (no cookie is set until /auth/login),
+      // so send them to log in — prefill their email for convenience.
+      navigate("/login", {
+        replace: true,
+        state: { prefillEmail: formData.emailId.trim() },
+      });
     }
   };
 

@@ -13,15 +13,24 @@ const axiosInstance = axios.create({
 
 // Normalize every error into a plain Error with a readable message,
 // so callers can just do `err.message` regardless of failure type.
+interface ApiErrorBody {
+  message?: string;
+  error?: string;
+  data?: { message?: string; error?: string };
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string }>) => {
+  (error: AxiosError<ApiErrorBody | string>) => {
     if (error.response) {
-      // Server responded with a non-2xx status
-      const data = error.response.data as { message?: string } | string | undefined;
+      // The backend isn't consistent about wrapping errors in `data` (signup/login
+      // return { message, error } at the top level; logout/forgotPassword wrap it
+      // in { data: { message, error } }) — so check every shape.
+      const body = error.response.data;
       const message =
-        (typeof data === "string" && data) ||
-        (typeof data === "object" && data?.message) ||
+        (typeof body === "string" && body) ||
+        (typeof body === "object" &&
+          (body?.error || body?.message || body?.data?.error || body?.data?.message)) ||
         "Something went wrong. Please try again.";
       return Promise.reject(new Error(message));
     }
