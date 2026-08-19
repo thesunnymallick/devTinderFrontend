@@ -28,6 +28,9 @@ export interface ConnectionUserSummary {
   firstName: string;
   lastName: string;
   photoUrl?: string;
+  age?: number;
+  bio?: string;
+  skills?: string[];
   [key: string]: unknown;
 }
 

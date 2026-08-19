@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchAcceptedConnections } from "../../store/connectionSlice";
-import NavBar from "../../components/shared/NavBar";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 
 const Connections: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -12,9 +12,8 @@ const Connections: React.FC = () => {
   }, [dispatch]);
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] flex flex-col">
-      <NavBar />
-      <main className="flex-1 max-w-2xl w-full mx-auto p-5">
+    <DashboardLayout>
+      <div className="max-w-2xl w-full mx-auto p-5">
         <h2 className="text-white font-semibold mb-4">Your matches</h2>
 
         {loadingAccepted && accepted.length === 0 && (
@@ -52,8 +51,8 @@ const Connections: React.FC = () => {
             </div>
           ))}
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

@@ -65,6 +65,17 @@ const feedSlice = createSlice({
     removeUserFromFeed: (state, action: PayloadAction<string>) => {
       state.users = state.users.filter((u) => u._id !== action.payload);
     },
+    /**
+     * Undo — puts a card back at the top of the local stack. Note this is
+     * client-side only: the connection request already sent to the backend
+     * on the original swipe is NOT retracted (there's no delete-connection
+     * endpoint), so a differing re-swipe may surface a "already exists" error.
+     */
+    restoreUserToFeed: (state, action: PayloadAction<FeedUser>) => {
+      if (!state.users.some((u) => u._id === action.payload._id)) {
+        state.users = [action.payload, ...state.users];
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -105,5 +116,5 @@ const feedSlice = createSlice({
   },
 });
 
-export const { clearSwipeError, removeUserFromFeed } = feedSlice.actions;
+export const { clearSwipeError, removeUserFromFeed, restoreUserToFeed } = feedSlice.actions;
 export default feedSlice.reducer;

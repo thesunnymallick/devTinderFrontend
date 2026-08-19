@@ -5,7 +5,7 @@ import {
   reviewConnection,
   clearConnectionError,
 } from "../../store/connectionSlice";
-import NavBar from "../../components/shared/NavBar";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 
 const Avatar: React.FC<{ firstName: string; lastName: string; photoUrl?: string }> = ({
   firstName,
@@ -38,9 +38,8 @@ const Requests: React.FC = () => {
   const sent = pending.filter((p) => p.type === "SENT");
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] flex flex-col">
-      <NavBar />
-      <main className="flex-1 max-w-2xl w-full mx-auto p-5 space-y-8">
+    <DashboardLayout>
+      <div className="max-w-2xl w-full mx-auto p-5 space-y-8">
         {error && (
           <div className="flex items-center justify-between gap-3 p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
@@ -129,8 +128,8 @@ const Requests: React.FC = () => {
             ))}
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

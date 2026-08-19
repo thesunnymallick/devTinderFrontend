@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { updateUserProfile, clearProfileError, clearProfileSuccess } from "../../store/authSlice";
 import { validateFirstName, validateLastName } from "../../utils/validation";
-import NavBar from "../../components/shared/NavBar";
+import DashboardLayout from "../../components/layout/DashboardLayout";
 
 interface ProfileFormData {
   firstName: string;
@@ -93,9 +93,8 @@ const Profile: React.FC = () => {
     }`;
 
   return (
-    <div className="min-h-screen bg-[#0D0D0F] flex flex-col">
-      <NavBar />
-      <main className="flex-1 flex items-start sm:items-center justify-center p-4">
+    <DashboardLayout>
+      <div className="flex items-start sm:items-center justify-center p-4 min-h-full">
         <div className="w-full max-w-md bg-[#141418]/60 border border-[#2A2A35] rounded-2xl p-6 sm:p-8 my-6">
           <h2 className="text-xl font-bold text-white mb-5">Edit profile</h2>
 
@@ -241,8 +240,8 @@ const Profile: React.FC = () => {
             </button>
           </form>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

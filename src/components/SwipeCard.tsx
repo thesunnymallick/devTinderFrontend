@@ -101,9 +101,15 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
         zIndex: 100 - stackPosition,
       }}
     >
-      <div className="w-full h-full rounded-3xl overflow-hidden bg-[#141418] border border-[#2A2A35] shadow-2xl relative flex flex-col">
+      <div
+        className={`w-full h-full rounded-[28px] overflow-hidden bg-[#141418] border relative flex flex-col ${
+          isTop
+            ? "border-[#8B5CF6]/30 shadow-[0_0_60px_-15px_rgba(139,92,246,0.35)]"
+            : "border-[#2A2A35] shadow-2xl"
+        }`}
+      >
         {/* Photo */}
-        <div className="relative flex-[2] bg-[#18181B] min-h-0">
+        <div className="relative flex-[2] bg-gradient-to-br from-[#1c1c22] to-[#101013] min-h-0">
           {user.photoUrl ? (
             <img
               src={user.photoUrl}
@@ -112,9 +118,11 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-slate-600">
-              {user.firstName?.[0]}
-              {user.lastName?.[0]}
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="w-24 h-24 rounded-full bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center text-3xl font-bold text-violet-300">
+                {user.firstName?.[0]}
+                {user.lastName?.[0]}
+              </span>
             </div>
           )}
 
@@ -143,22 +151,22 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
         </div>
 
         {/* Info */}
-        <div className="flex-1 p-5 flex flex-col gap-2 overflow-y-auto min-h-0">
-          <h3 className="text-xl font-bold text-white">
+        <div className="flex-1 p-5 sm:p-6 flex flex-col gap-2.5 overflow-y-auto min-h-0">
+          <h3 className="text-2xl font-bold text-white tracking-tight">
             {user.firstName} {user.lastName}
             {user.age ? (
               <span className="text-slate-400 font-normal">, {user.age}</span>
             ) : null}
           </h3>
           {user.bio && (
-            <p className="text-sm text-slate-400 line-clamp-2">{user.bio}</p>
+            <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">{user.bio}</p>
           )}
           {user.skills && user.skills.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-1">
-              {user.skills.slice(0, 5).map((skill) => (
+              {user.skills.slice(0, 6).map((skill) => (
                 <span
                   key={skill}
-                  className="px-2.5 py-1 text-xs rounded-full bg-[#8B5CF6]/15 text-violet-300 border border-[#8B5CF6]/30"
+                  className="px-2.5 py-1 text-xs font-medium rounded-lg bg-[#8B5CF6]/12 text-violet-300 border border-[#8B5CF6]/25"
                 >
                   {skill}
                 </span>
