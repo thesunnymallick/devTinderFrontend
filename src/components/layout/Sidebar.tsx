@@ -55,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       {/* Mobile scrim */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/60 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/60 z-50 lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />

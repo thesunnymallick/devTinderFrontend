@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Search01Icon, Cancel01Icon, FavouriteIcon, StarIcon, ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, FavouriteIcon, StarIcon, ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchFeed, swipeUser, removeUserFromFeed, restoreUserToFeed, clearSwipeError } from "../../store/feedSlice";
 import { fetchAcceptedConnections } from "../../store/connectionSlice";
@@ -40,7 +40,6 @@ const Home: React.FC = () => {
 
   const [pendingDirection, setPendingDirection] = useState<"left" | "right" | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [searchTerm, setSearchTerm] = useState("");
   const [lastSwiped, setLastSwiped] = useState<FeedUser | null>(null);
 
   useEffect(() => {
@@ -76,23 +75,15 @@ const Home: React.FC = () => {
         )
       );
     }
-    if (searchTerm.trim()) {
-      const term = searchTerm.trim().toLowerCase();
-      list = list.filter(
-        (u) =>
-          `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
-          (u.skills ?? []).some((skill) => skill.toLowerCase().includes(term))
-      );
-    }
     return list;
-  }, [users, activeCategory, searchTerm]);
+  }, [users, activeCategory]);
 
   const trendingSkills = useMemo(() => {
     const counts = new Map<string, number>();
     users.forEach((u) => (u.skills ?? []).forEach((s) => counts.set(s, (counts.get(s) ?? 0) + 1)));
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+      .slice(0, 6);
   }, [users]);
 
   const profileStrength = useMemo(() => {
@@ -126,45 +117,35 @@ const Home: React.FC = () => {
     <DashboardLayout>
       <div className="relative">
         {/* Ambient glow, matches the auth pages */}
-        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-violet-500/10 blur-[160px]" />
+        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] rounded-full bg-violet-500/10 blur-[120px] sm:blur-[160px]" />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6">
-          {/* Search + filters */}
-          <div className="space-y-4 mb-6">
-            <div className="relative max-w-md">
-              <HugeiconsIcon
-                icon={Search01Icon}
-                size={18}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
-              />
-              <input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name or skill..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl bg-[#141418] border border-[#2A2A35] text-white placeholder:text-[#71717A] focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30 focus:border-[#8B5CF6] transition-all"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.label}
-                  onClick={() => setActiveCategory(cat.label)}
-                  className={`shrink-0 px-3.5 py-1.5 text-sm font-medium rounded-full border transition-colors ${
-                    activeCategory === cat.label
-                      ? "bg-[#8B5CF6] border-[#8B5CF6] text-white"
-                      : "bg-[#141418] border-[#2A2A35] text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
+          {/* Page heading */}
+          <div className="mb-5 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Discover developers</h1>
+            <p className="text-sm text-slate-500 mt-1">Swipe through profiles that match your stack.</p>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8">
+          {/* Category filters */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-6 sm:mb-8 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.label}
+                onClick={() => setActiveCategory(cat.label)}
+                className={`shrink-0 px-3.5 py-1.5 text-sm font-medium rounded-full border transition-colors ${
+                  activeCategory === cat.label
+                    ? "bg-[#8B5CF6] border-[#8B5CF6] text-white shadow-md shadow-violet-500/20"
+                    : "bg-[#141418] border-[#2A2A35] text-slate-400 hover:text-slate-200 hover:border-[#3A3A45]"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6 sm:gap-8">
             {/* Card column */}
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center order-1">
               <div className="relative w-full max-w-sm aspect-[3/4]">
                 {loading && filteredUsers.length === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -224,27 +205,27 @@ const Home: React.FC = () => {
 
               {/* Action buttons */}
               {topUser && (
-                <div className="flex items-center gap-5 mt-8">
+                <div className="flex items-center gap-4 sm:gap-5 mt-7 sm:mt-8">
                   <button
                     onClick={handleUndo}
                     disabled={!lastSwiped}
                     title={lastSwiped ? "Bring the last card back" : "Nothing to undo"}
                     aria-label="Undo"
-                    className="w-11 h-11 rounded-full bg-[#141418] border border-[#2A2A35] flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:scale-110 active:scale-95 transition-all"
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#141418] border border-[#2A2A35] flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:scale-110 active:scale-95 transition-all"
                   >
                     <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={18} />
                   </button>
                   <button
                     onClick={() => setPendingDirection("left")}
                     aria-label="Pass"
-                    className="w-14 h-14 rounded-full bg-[#141418] border border-[#2A2A35] flex items-center justify-center text-red-500 hover:scale-110 active:scale-95 transition-transform"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#141418] border border-[#2A2A35] flex items-center justify-center text-red-500 hover:scale-110 active:scale-95 transition-transform"
                   >
                     <HugeiconsIcon icon={Cancel01Icon} size={24} />
                   </button>
                   <button
                     onClick={() => setPendingDirection("right")}
                     aria-label="Like"
-                    className="w-16 h-16 rounded-full bg-gradient-to-r from-[#7C5CFF] to-[#A78BFA] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-transform shadow-lg shadow-violet-500/30"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-[#7C5CFF] to-[#A78BFA] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-transform shadow-lg shadow-violet-500/30"
                   >
                     <HugeiconsIcon icon={FavouriteIcon} size={26} />
                   </button>
@@ -252,7 +233,7 @@ const Home: React.FC = () => {
                     onClick={() => setPendingDirection("right")}
                     aria-label="Super like"
                     title="Also sends a like — no separate backend tier exists yet"
-                    className="w-11 h-11 rounded-full bg-[#141418] border border-[#2A2A35] flex items-center justify-center text-sky-400 hover:scale-110 active:scale-95 transition-all"
+                    className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#141418] border border-[#2A2A35] flex items-center justify-center text-sky-400 hover:scale-110 active:scale-95 transition-all"
                   >
                     <HugeiconsIcon icon={StarIcon} size={18} />
                   </button>
@@ -264,99 +245,101 @@ const Home: React.FC = () => {
               </p>
             </div>
 
-            {/* Right rail */}
-            <div className="space-y-5 hidden xl:block">
-              {/* Your matches */}
-              <div className="bg-[#141418] border border-[#2A2A35] rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-white">Your matches</h3>
-                  {accepted.length > 0 && (
-                    <a href="/connections" className="text-xs text-violet-400 hover:text-violet-300">
-                      View all
+            {/* Right rail — a horizontally swipeable card strip on mobile/tablet, a sticky sidebar at lg+ */}
+            <div className="order-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+              <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-1 -mb-1 lg:flex-col lg:overflow-visible lg:gap-5 lg:sticky lg:top-24 lg:pb-0 lg:mb-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+                {/* Your matches */}
+                <div className="shrink-0 snap-center w-[78%] sm:w-72 lg:w-auto bg-[#141418] border border-[#2A2A35] rounded-2xl p-4 hover:border-[#3A3A45] transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-white">Your matches</h3>
+                    {accepted.length > 0 && (
+                      <a href="/connections" className="text-xs text-violet-400 hover:text-violet-300">
+                        View all
+                      </a>
+                    )}
+                  </div>
+                  {accepted.length === 0 ? (
+                    <p className="text-xs text-slate-500">No matches yet — start swiping!</p>
+                  ) : (
+                    <div className="flex items-center -space-x-2">
+                      {accepted.slice(0, 6).map((c) => (
+                        <div
+                          key={c.connectionId}
+                          title={`${c.user.firstName} ${c.user.lastName}`}
+                          className="w-9 h-9 rounded-full bg-[#18181B] border-2 border-[#141418] overflow-hidden flex items-center justify-center text-[11px] font-semibold text-slate-300"
+                        >
+                          {c.user.photoUrl ? (
+                            <img src={c.user.photoUrl} alt={c.user.firstName} className="w-full h-full object-cover" />
+                          ) : (
+                            <>
+                              {c.user.firstName?.[0]}
+                              {c.user.lastName?.[0]}
+                            </>
+                          )}
+                        </div>
+                      ))}
+                      {accepted.length > 6 && (
+                        <div className="w-9 h-9 rounded-full bg-[#8B5CF6]/15 border-2 border-[#141418] flex items-center justify-center text-[11px] font-semibold text-violet-300">
+                          +{accepted.length - 6}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Profile strength */}
+                <div className="shrink-0 snap-center w-[78%] sm:w-72 lg:w-auto bg-[#141418] border border-[#2A2A35] rounded-2xl p-4 hover:border-[#3A3A45] transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-white">Your profile strength</h3>
+                    <span className="text-sm font-bold text-violet-400">{profileStrength.percent}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[#2A2A35] overflow-hidden mb-3">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#7C5CFF] to-[#A78BFA] rounded-full transition-all"
+                      style={{ width: `${profileStrength.percent}%` }}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    {profileStrength.checks.map((c) => (
+                      <div key={c.label} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">{c.label}</span>
+                        <span className={c.done ? "text-emerald-400" : "text-slate-600"}>
+                          {c.done ? "✓" : "○"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {profileStrength.percent < 100 && (
+                    <a
+                      href="/profile"
+                      className="block mt-3 text-center text-xs font-medium text-violet-400 hover:text-violet-300"
+                    >
+                      Complete your profile
                     </a>
                   )}
                 </div>
-                {accepted.length === 0 ? (
-                  <p className="text-xs text-slate-500">No matches yet — start swiping!</p>
-                ) : (
-                  <div className="flex items-center -space-x-2">
-                    {accepted.slice(0, 6).map((c) => (
-                      <div
-                        key={c.connectionId}
-                        title={`${c.user.firstName} ${c.user.lastName}`}
-                        className="w-9 h-9 rounded-full bg-[#18181B] border-2 border-[#141418] overflow-hidden flex items-center justify-center text-[11px] font-semibold text-slate-300"
-                      >
-                        {c.user.photoUrl ? (
-                          <img src={c.user.photoUrl} alt={c.user.firstName} className="w-full h-full object-cover" />
-                        ) : (
-                          <>
-                            {c.user.firstName?.[0]}
-                            {c.user.lastName?.[0]}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                    {accepted.length > 6 && (
-                      <div className="w-9 h-9 rounded-full bg-[#8B5CF6]/15 border-2 border-[#141418] flex items-center justify-center text-[11px] font-semibold text-violet-300">
-                        +{accepted.length - 6}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
 
-              {/* Profile strength */}
-              <div className="bg-[#141418] border border-[#2A2A35] rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-white">Your profile strength</h3>
-                  <span className="text-sm font-bold text-violet-400">{profileStrength.percent}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-[#2A2A35] overflow-hidden mb-3">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#7C5CFF] to-[#A78BFA] rounded-full transition-all"
-                    style={{ width: `${profileStrength.percent}%` }}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  {profileStrength.checks.map((c) => (
-                    <div key={c.label} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400">{c.label}</span>
-                      <span className={c.done ? "text-emerald-400" : "text-slate-600"}>
-                        {c.done ? "✓" : "○"}
-                      </span>
+                {/* Trending skills (from current feed batch) */}
+                <div className="shrink-0 snap-center w-[78%] sm:w-72 lg:w-auto bg-[#141418] border border-[#2A2A35] rounded-2xl p-4 hover:border-[#3A3A45] transition-colors">
+                  <h3 className="text-sm font-semibold text-white mb-3">Trending in your feed</h3>
+                  {trendingSkills.length === 0 ? (
+                    <p className="text-xs text-slate-500">Not enough data yet.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {trendingSkills.map(([skill, count]) => (
+                        <span
+                          key={skill}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#18181B] border border-[#2A2A35] text-xs text-slate-300"
+                        >
+                          {skill}
+                          <span className="text-slate-500">{count}</span>
+                        </span>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-                {profileStrength.percent < 100 && (
-                  <a
-                    href="/profile"
-                    className="block mt-3 text-center text-xs font-medium text-violet-400 hover:text-violet-300"
-                  >
-                    Complete your profile
-                  </a>
-                )}
               </div>
-
-              {/* Trending skills (from current feed batch) */}
-              <div className="bg-[#141418] border border-[#2A2A35] rounded-2xl p-4">
-                <h3 className="text-sm font-semibold text-white mb-3">Trending in your feed</h3>
-                {trendingSkills.length === 0 ? (
-                  <p className="text-xs text-slate-500">Not enough data yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {trendingSkills.map(([skill, count]) => (
-                      <button
-                        key={skill}
-                        onClick={() => setSearchTerm(skill)}
-                        className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-[#18181B] transition-colors text-left"
-                      >
-                        <span className="text-sm text-slate-300">{skill}</span>
-                        <span className="text-xs text-slate-500">{count} dev{count > 1 ? "s" : ""}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <p className="text-[11px] text-slate-600 mt-2 text-center lg:hidden">Swipe sideways for more →</p>
             </div>
           </div>
         </div>

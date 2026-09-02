@@ -98,7 +98,7 @@ const SwipeCard: React.FC<SwipeCardProps> = ({
           : `translateY(${stackTranslateY}px) scale(${stackScale})`,
         transition: isDragging ? "none" : "transform 0.35s ease, opacity 0.35s ease",
         opacity: isFlyingOut ? 0.3 : 1,
-        zIndex: 100 - stackPosition,
+         zIndex: 20 - stackPosition,
       }}
     >
       <div
